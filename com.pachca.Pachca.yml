@@ -1,0 +1,68 @@
+app-id: com.pachca.Pachca
+runtime: org.freedesktop.Platform
+runtime-version: '22.08'
+base: org.electronjs.Electron2.BaseApp
+base-version: '22.08'
+sdk: org.freedesktop.Sdk
+command: pachca
+separate-locales: false
+tags:
+  - proprietary
+finish-args:
+  - --device=dri
+  - --socket=x11
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --share=network
+  - --system-talk-name=org.freedesktop.NetworkManager
+  - --filesystem=xdg-download
+  - --talk-name=org.freedesktop.secrets
+  - --talk-name=org.gtk.Notifications
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=com.canonical.AppMenu.Registrar
+modules:
+  - name: pachca
+    buildsystem: simple
+    build-commands:
+      - install apply_extra /app/bin
+      - install pachca.sh /app/bin/pachca
+      - cp /usr/bin/ar /app/bin
+      - ARCH_TRIPLE=$(gcc --print-multiarch) && cp /usr/lib/${ARCH_TRIPLE}/libbfd-*.so /app/lib
+    sources:
+      - type: script
+        dest-filename: apply_extra
+        commands:
+          - ar x pachca_amd64.deb
+          - rm pachca_amd64.deb
+          - tar xf data.tar.xz
+          - rm -f control.tar.xz data.tar.xz debian-binary
+          - mv usr/* .
+          - rmdir usr
+          - mkdir -p export/share/applications
+          - sed -e 's/Comment.*/Comment=Corporate messenger for modern teams/' -e 's/Icon=pachca/Icon=com.pachca.Pachca/' -e 's/Name=pachca/Name=Pachca/' -e 's/Categories.*/Categories=Network;InstantMessaging;/' -e 's$Exec=pachca$Exec=/app/bin/pachca$' share/applications/pachca.desktop > export/share/applications/com.pachca.Pachca.desktop
+          - rm share/applications/pachca.desktop
+          - echo StartupWMClass=pachca >> export/share/applications/com.pachca.Pachca.desktop
+          - mkdir -p export/share/icons/hicolor/512x512/apps
+          - install -p -Dm644 share/pixmaps/pachca.png export/share/icons/hicolor/512x512/apps/com.pachca.Pachca.png
+          - rm share/pixmaps/pachca.png
+      - type: script
+        dest-filename: pachca.sh
+        commands:
+          - PACHCA_LOGS=$XDG_CONFIG_HOME/logs
+          - mkdir -p $PACHCA_LOGS
+          - export TMPDIR="$XDG_RUNTIME_DIR/app/$FLATPAK_ID"
+          - exec zypak-wrapper /app/extra/bin/pachca --executed-from="$(pwd)" --pid=$$ "$@" > "$PACHCA_LOGS/pachca-startup.log" 2>&1
+      - type: extra-data
+        filename: pachca_amd64.deb
+        url: https://github.com/pachca/pachca-desktop/releases/download/v1.1.7/pachca_1.1.7_amd64.deb
+        sha256: b1d7a9dc1089f3a147eedacdca21082a3079552fb80fafe174a465d42e8836f3
+        size: 61239124
+        only-arches:
+          - x86_64
+        x-checker-data:
+          type: json
+          url: https://api.github.com/repos/pachca/pachca-desktop/releases/latest
+          version-query: ".tag_name | sub(\"^v\"; \"\")"
+          url-query: ".assets[] | select(.name==\"pachca_\" + $version + \"_amd64.deb\") | .browser_download_url"
+
