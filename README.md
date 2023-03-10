@@ -25,6 +25,14 @@ All tests performed on Fedora 37 KDE Plasma.
 
 ### Build
 
+Dependecies:
+
+```sh
+$ flatpak install org.freedesktop.Sdk//22.08 org.electronjs.Electron2.BaseApp//22.08
+```
+
+Build and install:
+
 ```sh
 $ flatpak-builder --user --install --force-clean build-dir com.pachca.Pachca.yml
 ```
