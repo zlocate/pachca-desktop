@@ -1,0 +1,25 @@
+name: Create Flatpak build
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "feature/flatpak" ]
+  pull_request:
+    branches: [ "feature/flatpak" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+jobs:
+    flatpak:
+      runs-on: ubuntu-latest
+      container:
+        image: bilelmoussaoui/flatpak-github-actions:gnome-44
+        options: --privileged
+      steps:
+      - uses: actions/checkout@v3
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6.1
+        with:
+          bundle: pachca.flatpak
+          manifest-path: com.pachca.Pachca.yml
+          cache-key: flatpak-builder-${{ github.sha }}d
